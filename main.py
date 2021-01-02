@@ -1,3 +1,7 @@
+from config import GlobalConfig
+import pandas as pd
+from train import seed_all, train_on_fold
+
 if __name__ == "__main__":
     config = GlobalConfig
     seed_all(seed=config.seed)
@@ -10,5 +14,5 @@ if __name__ == "__main__":
 #     df_folds['fold'] = df_folds['fold'].astype(int)
     print(df_folds.groupby(['fold', config.class_col_name]).size())
     train_csv.target.value_counts()
-    train_single_fold = train_on_fold(config, fold=1)
+    train_single_fold = train_on_fold(df_folds, config, fold=1)
     #train_all_folds = train_loop(df_folds,config)

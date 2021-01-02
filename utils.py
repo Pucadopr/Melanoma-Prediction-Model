@@ -1,8 +1,10 @@
+import os
+import sklearn
+import albumentations
+from albumentations.pytorch.transforms import ToTensorV2
 from collections import Counter
 from tqdm import tqdm
 from typing import Optional, List
-
-# possible reference: https://www.programiz.com/python-programming/methods/string/join
 
 def get_file_type(image_folder_path: str, allowed_extensions: Optional[List]=None):
     if allowed_extensions is None:
@@ -91,7 +93,6 @@ class AccuracyMeter:
 
         self.sum += total_score
 
-    # 1. I doubt I need to use @property here, but I saw one guy used it, so I am confused.
     @property
     def avg(self):
         self.avg_score = self.sum / self.count

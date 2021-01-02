@@ -1,14 +1,15 @@
+import torch
+
 class GlobalConfig:
     seed = 1958
     num_classes = 2
     batch_size = 16
     n_epochs = 5
-    # lr = 5e-4
     lr = 0.00003
     scheduler = "CosineAnnealingWarmRestarts"
-    train_step_scheduler = False  # do scheduler.step after optimizer.step
+    train_step_scheduler = False
     val_step_scheduler = True
-    T_0 = 10  # CosineAnnealingWarmRestarts
+    T_0 = 10 
     min_lr = 1e-6
     weight_decay = 1e-6
     image_size = 512
@@ -25,5 +26,5 @@ class GlobalConfig:
     save_path = "./"
     # test_path = '../input/cassava-leaf-disease-classification/test_images/'
     effnet = "tf_efficientnet_b2_ns"
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_weight_path = '../input/efficientnet-weights/tf_efficientnet_b2_ns-00306e48.pth'

@@ -1,5 +1,6 @@
 import os
 import cv2
+from utils import get_file_type
 import numpy as np
 import pandas as pd
 import albumentations

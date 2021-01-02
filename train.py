@@ -1,3 +1,19 @@
+import torch
+from torch import nn
+import numpy as np
+import random
+import time
+import sklearn
+from dataset import Melanoma
+import pandas as pd 
+import os
+from torch.utils.data import DataLoader
+from config import GlobalConfig as config
+from model import CustomEfficientNet
+import model
+from datetime import datetime
+from utils import AccuracyMeter, AverageLossMeter,get_transforms
+
 def seed_all(seed: int = 1992):
 
     print("Using Seed Number {}".format(seed))
@@ -150,12 +166,7 @@ class Trainer:
             softmax_preds = torch.nn.Softmax(dim=1)(input=logits).to("cpu").detach().numpy()
             y_preds = softmax_preds.argmax(1)
             
-            accuracy_scores.update(y_true, y_preds, batch_size=batch_size)
-            
-
-            # not too sure yet KIV
-            if self.config.train_step_scheduler:
-                self.scheduler.step()
+            accuracy_scores.update(y_true, y_preds, batch_size=batch_size)            
 
             # measure elapsed time
             end_time = time.time()
@@ -198,8 +209,7 @@ class Trainer:
                 summary_loss.update(loss.item(), batch_size)
 
                 y_true = labels.cpu().numpy()
-                # Write that we do not need to detach here as no gradients involved.
-                # Basically torch.nn.Softmax(dim=1)(input=logits).to("cpu").detach.numpy()
+
                 softmax_preds = torch.nn.Softmax(dim=1)(
                     input=logits).to("cpu").numpy()
                 y_preds = softmax_preds.argmax(1)
@@ -254,9 +264,9 @@ class Trainer:
             logger.write(f"{message}\n")
 
 
-def train_on_fold(config, fold: int):
+def train_on_fold(df_folds, config, fold: int):
     model = CustomEfficientNet(config=config, pretrained=True)
-    # consider remove if clause?
+
     if torch.cuda.is_available():
         model.cuda()
 
@@ -280,9 +290,9 @@ def train_on_fold(config, fold: int):
                             worker_init_fn=seed_worker)
 
 
-    cassava_trainer = Trainer(model=model, config=config)
+    melanoma_trainer = Trainer(model=model, config=config)
 
-    curr_fold_best_checkpoint = cassava_trainer.fit(train_loader, val_loader,
+    curr_fold_best_checkpoint = melanoma_trainer.fit(train_loader, val_loader,
                                                     fold)
 
     # loading checkpoint for all 10 epochs for this current fold
@@ -310,15 +320,14 @@ def train_loop(df_folds, config, fold_num: int = None, train_one_fold=False):
     cv_score_list = []
     oof_df = pd.DataFrame()
     if train_one_fold:
-        _oof_df = train_on_fold(fold_num)
+        _oof_df = train_on_fold(df_folds,config,fold_num)
         curr_fold_best_score = get_result(_oof_df)
         print("Fold {} OOF Score is {}".format(fold_num + 1,
                                                curr_fold_best_score))
     else:
         #for fold in sorted(df_folds["fold"].unique()):
         for fold in range(config.num_folds):
-            # note very carefully you need to add 1 here. because df_folds is 1,2,3,4,5
-            _oof_df = train_on_fold(config, fold)
+            _oof_df = train_on_fold(df_folds,config, fold)
             #_oof_df = train_on_fold(config, fold+1)
             oof_df = pd.concat([oof_df, _oof_df])
             curr_fold_best_score = get_result(_oof_df)
